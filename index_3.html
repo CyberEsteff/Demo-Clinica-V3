@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Bot - Clínica</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #0b141a;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .phone-frame {
+      width: 380px;
+      height: 680px;
+      background: #0b141a;
+      border-radius: 32px;
+      border: 3px solid #2a3942;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.05),
+        0 25px 60px rgba(0,0,0,0.5),
+        0 0 100px rgba(0,168,132,0.08);
+    }
+
+    /* Header */
+    .chat-header {
+      background: #1f2c33;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .header-back {
+      color: #00a884;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00a884, #00d4aa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: white;
+      font-weight: 700;
+    }
+
+    .header-info {
+      flex: 1;
+    }
+
+    .header-name {
+      color: #e9edef;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .header-status {
+      color: #8696a0;
+      font-size: 12px;
+    }
+
+    .header-status.online {
+      color: #00a884;
+    }
+
+    .header-reset {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #8696a0;
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .header-reset:hover {
+      color: #e9edef;
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    /* Chat area */
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      background:
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.015'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+        #0b141a;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .chat-body::-webkit-scrollbar { width: 5px; }
+    .chat-body::-webkit-scrollbar-thumb { background: #374045; border-radius: 10px; }
+
+    /* Messages */
+    .message {
+      max-width: 82%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      line-height: 1.45;
+      position: relative;
+      animation: msgIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .message.user {
+      background: #005c4b;
+      color: #e9edef;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+
+    .message.bot {
+      background: #1f2c33;
+      color: #e9edef;
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+
+    .message .time {
+      font-size: 10px;
+      color: #8696a0;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    .message.user .time {
+      color: rgba(255,255,255,0.45);
+    }
+
+    .message.system-warning {
+      background: rgba(255, 165, 0, 0.15);
+      color: #ffaa44;
+      align-self: center;
+      max-width: 90%;
+      font-size: 12px;
+      text-align: center;
+      border-radius: 6px;
+    }
+
+    /* Options as buttons */
+    .bot-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .bot-options button {
+      background: rgba(0,168,132,0.12);
+      border: 1px solid rgba(0,168,132,0.3);
+      color: #00d4aa;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+
+    .bot-options button:hover {
+      background: rgba(0,168,132,0.22);
+      border-color: #00a884;
+    }
+
+    .bot-options button:active {
+      transform: scale(0.98);
+    }
+
+    .bot-options button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Typing indicator */
+    .typing {
+      align-self: flex-start;
+      background: #1f2c33;
+      padding: 12px 18px;
+      border-radius: 8px;
+      border-bottom-left-radius: 2px;
+      display: flex;
+      gap: 5px;
+      animation: msgIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .typing span {
+      width: 7px;
+      height: 7px;
+      background: #8696a0;
+      border-radius: 50%;
+      animation: typingBounce 1.2s infinite;
+    }
+
+    .typing span:nth-child(2) { animation-delay: 0.15s; }
+    .typing span:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* Input area */
+    .chat-input {
+      background: #1f2c33;
+      padding: 10px 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .chat-input input {
+      flex: 1;
+      background: #2a3942;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #e9edef;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .chat-input input::placeholder {
+      color: #8696a0;
+    }
+
+    .chat-input button {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      background: #00a884;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .chat-input button:hover {
+      background: #00c49a;
+    }
+
+    .chat-input button:active {
+      transform: scale(0.92);
+    }
+
+    .chat-input button:disabled {
+      background: #374045;
+      cursor: not-allowed;
+    }
+
+    /* Welcome date chip */
+    .date-chip {
+      align-self: center;
+      background: #1f2c33;
+      color: #8696a0;
+      font-size: 11px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    /* Error toast */
+    .error-toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #ff4444;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    .error-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Branding */
+    .branding {
+      text-align: center;
+      padding: 10px;
+      color: #8696a0;
+      font-size: 11px;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-frame">
+    <div class="chat-header">
+      <div class="header-back">&#8249;</div>
+      <div class="header-avatar">C</div>
+      <div class="header-info">
+        <div class="header-name">Clínica Demo</div>
+        <div class="header-status online" id="status">en línea</div>
+      </div>
+      <!-- FIX E5: Boton de reset de sesion para facilitar testing -->
+      <button class="header-reset" onclick="resetSession()" title="Reiniciar sesión de chat">RESET</button>
+    </div>
+
+    <div class="chat-body" id="chat">
+      <div class="date-chip">Hoy</div>
+    </div>
+
+    <div class="chat-input">
+      <input type="text" id="input" placeholder="Escribí un mensaje..." autocomplete="off" />
+      <button id="sendBtn" onclick="send()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="error-toast" id="errorToast">Error de conexión. Intentá de nuevo.</div>
+
+  <script>
+  // ========================================================================
+  // CONFIGURACIÓN — Reemplazar con los valores reales de tu n8n
+  // ========================================================================
+  const WEBHOOK_URL = "https://n8n.profitableguides.com/webhook/demo-turnos-v2";
+
+  // FIX E5: El valor de este token DEBE coincidir exactamente con la credencial
+  // "Header Auth" configurada en el nodo Webhook de n8n.
+  // Si la credencial n8n espera header "Authorization" con valor "Bearer 123456",
+  // entonces esto es correcto. Si usa otro header (ej: "X-API-Key"), cambiar aquí.
+  const AUTH_TOKEN = "Bearer 123456";
+  // ========================================================================
+
+  const chatEl = document.getElementById("chat");
+  const inputEl = document.getElementById("input");
+  const sendBtn = document.getElementById("sendBtn");
+
+  // Genera y guarda un session_id único por usuario
+  function getSessionId() {
+    let sessionId = localStorage.getItem("clinica_demo_session_id");
+
+    if (!sessionId) {
+      sessionId = "sess_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem("clinica_demo_session_id", sessionId);
+    }
+
+    return sessionId;
+  }
+
+  // FIX E5: Reset de sesión para testing
+  function resetSession() {
+    localStorage.removeItem("clinica_demo_session_id");
+    chatEl.innerHTML = '<div class="date-chip">Hoy</div>';
+    addMessage("Sesión reiniciada. Podés empezar de nuevo.", "system-warning");
+    console.log("[CLINICA DEMO] Sesión reiniciada. Nuevo session_id se generará en el próximo mensaje.");
+  }
+
+  // Send on Enter key
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !sendBtn.disabled) send();
+  });
+
+  function getTime() {
+    return new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function addMessage(text, type) {
+    const div = document.createElement("div");
+    div.className = `message ${type}`;
+
+    // FIX E5: Para mensajes del sistema, sin timestamp
+    if (type === "system-warning") {
+      div.textContent = text;
+    } else {
+      div.innerHTML = `${text}<div class="time">${getTime()}${type === "user" ? ' ✓✓' : ''}</div>`;
+    }
+
+    chatEl.appendChild(div);
+    chatEl.scrollTop = chatEl.scrollHeight;
+    return div;
+  }
+
+  function showTyping() {
+    const div = document.createElement("div");
+    div.className = "typing";
+    div.id = "typing";
+    div.innerHTML = "<span></span><span></span><span></span>";
+    chatEl.appendChild(div);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
+  function hideTyping() {
+    const el = document.getElementById("typing");
+    if (el) el.remove();
+  }
+
+  function showError(msg) {
+    const toast = document.getElementById("errorToast");
+    toast.textContent = msg || "Error de conexión. Intentá de nuevo.";
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3500);
+  }
+
+  function sendOption(text) {
+    inputEl.value = text;
+    send();
+  }
+
+  // Deshabilitar botones de opciones previos mientras se procesa un mensaje
+  function disableOptionButtons() {
+    const buttons = chatEl.querySelectorAll('.bot-options button');
+    buttons.forEach(btn => { btn.disabled = true; });
+  }
+
+  // Habilitar botones de opciones
+  function enableOptionButtons() {
+    const buttons = chatEl.querySelectorAll('.bot-options button');
+    buttons.forEach(btn => { btn.disabled = false; });
+  }
+
+  async function send() {
+    const userMsg = inputEl.value.trim();
+    if (!userMsg) return;
+
+    inputEl.value = "";
+    sendBtn.disabled = true;
+    disableOptionButtons();
+
+    addMessage(userMsg, "user");
+
+    setTimeout(() => showTyping(), 400);
+
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": AUTH_TOKEN
+        },
+        body: JSON.stringify({
+          mensaje: userMsg,
+          session_id: getSessionId()
+        })
+      });
+
+      hideTyping();
+
+      // FIX E4: Manejo explicito del codigo 429 (Rate Limited)
+      if (res.status === 429) {
+        addMessage("Demasiadas solicitudes. Esperá unos segundos antes de intentar de nuevo.", "system-warning");
+        return;
+      }
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+
+      // Validar que la respuesta tenga el formato esperado
+      if (!data || typeof data !== 'object') {
+        throw new Error('La respuesta no es un JSON válido');
+      }
+
+      let botHTML = data.mensaje || "...";
+
+      if (data.opciones && Array.isArray(data.opciones) && data.opciones.length > 0) {
+        botHTML += `<div class="bot-options">`;
+        data.opciones.forEach(opt => {
+          const cleanOpt = String(opt).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          const safeArg = JSON.stringify(String(opt));
+          botHTML += `<button onclick='sendOption(${safeArg})'>${cleanOpt}</button>`;
+        });
+        botHTML += `</div>`;
+      }
+
+      addMessage(botHTML, "bot");
+
+    } catch (err) {
+      hideTyping();
+      console.error("[CLINICA DEMO] Error:", err);
+
+      if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
+        showError("No se pudo conectar al servidor. ¿Está activo el webhook en n8n?");
+      } else if (err.message.includes("401") || err.message.includes("Unauthorized")) {
+        showError("Error de autenticación (401). Verificá que el token coincida con la credencial Header Auth en n8n.");
+      } else if (err.message.includes("429")) {
+        showError("Demasiadas solicitudes. Esperá unos segundos.");
+      } else {
+        showError("Algo salió mal. Revisá la consola (F12) para más detalles.");
+      }
+    }
+
+    sendBtn.disabled = false;
+    enableOptionButtons();
+    inputEl.focus();
+  }
+</script>
+
+</body>
+</html>
