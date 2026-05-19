@@ -165,6 +165,16 @@
       border-radius: 6px;
     }
 
+    .message a {
+      color: #00d4aa;
+      text-decoration: underline;
+      word-break: break-word;
+    }
+
+    .message a:hover {
+      color: #00c49a;
+    }
+
     /* Options as buttons */
     .bot-options {
       display: flex;
@@ -404,6 +414,22 @@
     return new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
   }
 
+  function escapeHTML(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function formatBotMessage(text) {
+    return escapeHTML(text)
+      .replace(
+        /(https?:\/\/[^\s]+)/g,
+        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+      )
+      .replace(/\n/g, "<br>");
+   }
+
   function addMessage(text, type) {
     const div = document.createElement("div");
     div.className = `message ${type}`;
@@ -500,7 +526,7 @@
         throw new Error('La respuesta no es un JSON válido');
       }
 
-      let botHTML = data.mensaje || "...";
+      let botHTML = formatBotMessage(data.mensaje || "...");
 
       if (data.opciones && Array.isArray(data.opciones) && data.opciones.length > 0) {
         botHTML += `<div class="bot-options">`;
